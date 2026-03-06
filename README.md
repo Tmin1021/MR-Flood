@@ -137,25 +137,6 @@ Assign the following references in the Inspector:
 - Near interaction / poke-based selection may require additional MRTK configuration depending on the device and interaction profile.
 - Flood logic currently uses node height thresholds rather than full terrain-based water simulation.
 
-## Known Rendering Note
-
-If the route line is hard to see on device:
-
-- keep the line slightly above the road surface
-- use a small but visible width multiplier
-- use a high-contrast unlit material
-- verify LineRenderer alignment and depth behavior
-- test on the actual target device, because editor rendering may differ from MR capture
-
-## Suggested Future Improvements
-
-- Replace closest-node routing with explicit building entrance nodes
-- Generate a flatter road-overlay mesh instead of a `LineRenderer`
-- Add dynamic hazard zones such as landslides or blocked streets
-- Support near-touch / poke interaction for easier building selection
-- Add tabletop scaling, filtering, and route explanation UI
-- Extend the system for smoke, dust, or low-visibility emergency navigation scenarios
-
 ## Research Context
 
 This prototype explores how MR can support **human interaction with environmental hazards** through intuitive spatial visualization. Instead of viewing a 2D map, users interact directly with a 3D city representation and observe how route availability changes as flood conditions evolve.

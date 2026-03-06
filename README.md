@@ -63,9 +63,6 @@ Displays short floating text feedback in MR.
 ### `EventManager.cs`
 Contains utility toggles such as water-plane visibility, OSM/Bing material switching, and bounds control for the city model.
 
-### `RuntimeNavMeshBuilder.cs`
-Builds a NavMesh at runtime. This is included for experimentation but is separate from the graph-based route system.
-
 ## Project Workflow
 
 1. Load the city model into the scene.

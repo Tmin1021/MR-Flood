@@ -111,7 +111,7 @@ public class PointSelectManager : MonoBehaviour
         }
     }
 
-    public void ComfirmPath()
+    public void ConfirmPath()
     {
         if (A == null || B == null || path == null || graph == null) return;
 

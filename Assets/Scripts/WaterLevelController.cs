@@ -6,7 +6,8 @@ public class WaterLevelController : MonoBehaviour
     [Header("References")]
     public PinchSlider slider;
     public Transform waterPlane;  
-    public Transform city;         
+    public Transform city;   
+    public Transform eventManager;      
 
     [Header("Flood level")]
     public float minLevel = 0f;  
@@ -30,7 +31,10 @@ public class WaterLevelController : MonoBehaviour
         if (slider != null) slider.OnValueUpdated.RemoveListener(OnSliderUpdated);
     }
 
-    private void OnSliderUpdated(SliderEventData data) => Apply(data.NewValue);
+    private void OnSliderUpdated(SliderEventData data){
+        Apply(data.NewValue);
+        eventManager.GetComponent<PointSelectManager>().ResetSelection();
+    }
 
     private void Apply(float t)
     {

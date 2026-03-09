@@ -13,7 +13,8 @@ public class SimpleGraphManager : MonoBehaviour
     private List<GraphNode> nodes = new List<GraphNode>();
 
     [Header("Flood")]
-    public float waterLevel = -10f;
+    public Transform flood;
+    private float waterLevel = -10f;
     public bool autoUpdateFlood = true;
 
     public class TempAttachment
@@ -46,6 +47,8 @@ public class SimpleGraphManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if(flood) waterLevel = flood.position.y;
+
         if(autoUpdateFlood)
         {
             UpdateFloodBlocking(waterLevel);
@@ -54,21 +57,27 @@ public class SimpleGraphManager : MonoBehaviour
 
     public void BuildGraphFromNeighbors()
     {
+        // for rebuild at runtime
+        foreach (var node in nodes)
+        {
+            if (node != null) node.edges.Clear();
+        }
         nodes.Clear();
+
         if(nodesParent == null)
         {
             Debug.Log("Assign parent of nodes!");
             return;
         }
 
-        foreach(Transform t in nodesParent.GetComponentInChildren<Transform>())
+        foreach(Transform t in nodesParent.GetComponentsInChildren<Transform>())
         {
             if(t == nodesParent) continue;
 
             var node = t.GetComponent<GraphNode>();
             if(node == null)
             {
-                t.AddComponent<GraphNode>();
+                node = t.AddComponent<GraphNode>();
                 //Debug.Log()
             }
             nodes.Add(node);
@@ -102,22 +111,22 @@ public class SimpleGraphManager : MonoBehaviour
         from.edges.Add(new GraphEdge(to, distance));
     }
 
-    public GraphNode GetClosestNode(Vector3 worldPos)
-    {
-        GraphNode closestNode = null;
-        float bestDist = float.MaxValue;
+    // public GraphNode GetClosestNode(Vector3 worldPos)
+    // {
+    //     GraphNode closestNode = null;
+    //     float bestDist = float.MaxValue;
         
-        foreach(var node in nodes)
-        {
-            float d = Vector3.Distance(node.Position, worldPos);
-            if(d <= bestDist)
-            {
-                closestNode = node;
-                bestDist = d;
-            }
-        }
-        return closestNode;
-    }
+    //     foreach(var node in nodes)
+    //     {
+    //         float d = Vector3.Distance(node.Position, worldPos);
+    //         if(d <= bestDist)
+    //         {
+    //             closestNode = node;
+    //             bestDist = d;
+    //         }
+    //     }
+    //     return closestNode;
+    // }
 
     public float GetClosestDistance(Vector3 worldPos)
     {
@@ -152,7 +161,7 @@ public class SimpleGraphManager : MonoBehaviour
     {
         if(nodesParent == null) return 0.0f;
         float res = float.MaxValue;
-        foreach(Transform b in buildingsParent.GetComponentInChildren<Transform>())
+        foreach(Transform b in buildingsParent.GetComponentsInChildren<Transform>())
         {
             float currentDist = GetClosestDistance(b.position);
             if(res >= currentDist)
@@ -191,6 +200,7 @@ public class SimpleGraphManager : MonoBehaviour
             {
                 var m = e.to;
                 if (m == null) continue;
+                if (n.blocked || m.blocked || e.blocked) continue;
 
                 // Avoid duplicate directed edges (because you often add bidirectional edges)
                 if (n.GetInstanceID() > m.GetInstanceID()) continue;

@@ -108,6 +108,8 @@ public class PointSelectManager : MonoBehaviour
             A = b;
             B = null;
             if(path) path.positionCount = 0;
+            confirmButton.SetActive(false);
+            resetButton.SetActive(false);
         }
     }
 

@@ -14,7 +14,7 @@ public class SimpleGraphManager : MonoBehaviour
 
     [Header("Flood")]
     public Transform flood;
-    private float waterLevel = -10f;
+    private float waterLevel;
     public bool autoUpdateFlood = true;
 
     public class TempAttachment
@@ -48,6 +48,11 @@ public class SimpleGraphManager : MonoBehaviour
     void Update()
     {
         if(flood) waterLevel = flood.position.y;
+        Debug.Log("Water:" + waterLevel);
+        // Water (Global Position):
+        // - Lowest:-0.116
+        // - Middle:-0.106
+        // - Highest:-0.096
 
         if(autoUpdateFlood)
         {
@@ -70,15 +75,12 @@ public class SimpleGraphManager : MonoBehaviour
             return;
         }
 
-        foreach(Transform t in nodesParent.GetComponentsInChildren<Transform>())
-        {
-            if(t == nodesParent) continue;
-
+        for (int i = 0; i < nodesParent.childCount; i++) {
+            Transform t = nodesParent.GetChild(i);
             var node = t.GetComponent<GraphNode>();
-            if(node == null)
-            {
+            if (node == null) {
                 node = t.AddComponent<GraphNode>();
-                //Debug.Log()
+                Debug.Log("T deo co graph node");
             }
             nodes.Add(node);
         }
@@ -148,7 +150,10 @@ public class SimpleGraphManager : MonoBehaviour
         waterLevel = newWaterLevel;
 
         foreach (var n in nodes)
+        {
             n.blocked = (n.EffectiveHeight < waterLevel);
+            Debug.Log("Node " + n.name + ": " + n.EffectiveHeight);
+        }
     }
 
     public bool IsBuildingFlooded(BuildingPoint b)

@@ -4,24 +4,30 @@ using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
 
 public class PointSelectManager : MonoBehaviour
 {
-    // Start is called before the first frame update
     public LineRenderer path;
     public GameObject housesParent;
-    public GameObject hoverTag; // need to show on the hover building
+    public GameObject hoverTag;
     public GameObject confirmButton;
     public GameObject resetButton;
     public Text hoverText;
-    public float tagOffset = 0.05f; // tag above how much with building ?
+    public float tagOffset = 0.05f;
     public SimpleGraphManager graph;
     public MRNotification notifier;
+
+    [Header("Arrow")]
+    public GameObject arrow1;   // points to A
+    public GameObject arrow2;   // points to B
+    private float arrowOffset = 0.02f;
 
     private BuildingPoint A;
     private BuildingPoint B;
     private BuildingPoint hoverOn;
     private bool ifClick = false;
+
     void Start()
     {
         if (path)
@@ -29,28 +35,28 @@ public class PointSelectManager : MonoBehaviour
             path.useWorldSpace = true;
             path.positionCount = 0;
         }
-        if (hoverTag) hoverTag.SetActive(false); // by default when starting.
 
-        if(housesParent == null) return;
+        if (hoverTag) hoverTag.SetActive(false);
+        if (arrow1) arrow1.SetActive(false);
+        if (arrow2) arrow2.SetActive(false);
+
+        if (housesParent == null) return;
+
         foreach (Transform t in housesParent.GetComponentsInChildren<Transform>(true))
         {
             if (t == housesParent.transform) continue;
 
-            // only add if it looks like a building object (has renderer)
             if (t.GetComponentInChildren<Renderer>() == null) continue;
 
             var bp = t.GetComponent<BuildingPoint>();
             if (bp == null) bp = t.gameObject.AddComponent<BuildingPoint>();
             bp.manager = this;
 
-            // IMPORTANT: must have a collider to be hit
             if (t.GetComponent<Collider>() == null)
             {
-                // simple collider (fast)
                 t.gameObject.AddComponent<BoxCollider>();
             }
         }
-
     }
 
     void Update()
@@ -59,57 +65,100 @@ public class PointSelectManager : MonoBehaviour
         if (A == null || B == null || path == null) return;
     }
 
-    // Update is called once per frame
     void LateUpdate()
     {
         if (hoverTag && hoverTag.activeSelf && Camera.main)
         {
-            hoverTag.transform.rotation = Quaternion.LookRotation(Camera.main.transform.position - hoverTag.transform.position);
+            hoverTag.transform.rotation =
+                Quaternion.LookRotation(Camera.main.transform.position - hoverTag.transform.position);
         }
+
+        // keep arrows following building if needed
+        UpdateSelectedArrows();
     }
 
     public void ShowTag(BuildingPoint b)
     {
         hoverOn = b;
-        if(hoverOn == null) return;
+        if (hoverOn == null) return;
 
-        hoverTag.SetActive(true);
-        hoverTag.transform.position = b.transform.position + Vector3.up * tagOffset; // get the building position
+        if (hoverTag)
+        {
+            hoverTag.SetActive(true);
+            hoverTag.transform.position = b.GetTopWorldPosition() + Vector3.up * tagOffset;
+        }
 
-        if (hoverText) hoverText.text = (b == A || b == B) ? "Selected" : "Tap to select";
+        if (hoverText)
+        {
+            if (b == A) hoverText.text = "Start selected";
+            else if (b == B) hoverText.text = "Destination selected";
+            else hoverText.text = "Tap to select";
+        }
     }
 
     public void HideTag(BuildingPoint b)
     {
-        if(hoverOn != b) return;
-        if(hoverOn != A && hoverOn != B && hoverTag) hoverTag.SetActive(false);
+        if (hoverOn != b) return;
 
+        if (hoverTag) hoverTag.SetActive(false);
         hoverOn = null;
     }
-    
+
     public void SelectPoint(BuildingPoint b)
     {
-        if(A == null) 
+        if (A == null)
         {
             A = b;
         }
         else if (B == null && A != b)
         {
             B = b;
-            
-            confirmButton.transform.position = b.transform.position + Vector3.up * tagOffset * 2;
+
+            confirmButton.transform.position = b.GetTopWorldPosition() + Vector3.up * tagOffset * 2f;
             confirmButton.SetActive(true);
 
-            resetButton.transform.position = b.transform.position + Vector3.up * tagOffset * 3;
+            resetButton.transform.position = b.GetTopWorldPosition() + Vector3.up * tagOffset * 3f;
             resetButton.SetActive(true);
         }
         else
         {
             A = b;
             B = null;
-            if(path) path.positionCount = 0;
+
+            if (path) path.positionCount = 0;
             confirmButton.SetActive(false);
             resetButton.SetActive(false);
+        }
+
+        UpdateSelectedArrows();
+    }
+
+    private void UpdateSelectedArrows()
+    {
+        if (arrow1 != null)
+        {
+            if (A != null)
+            {
+                arrow1.SetActive(true);
+                arrow1.transform.position = A.GetTopWorldPosition() + Vector3.up * arrowOffset;
+            }
+            else
+            {
+                arrow1.SetActive(false);
+            }
+        }
+
+        if (arrow2 != null)
+        {
+            if (B != null)
+            {
+                arrow2.SetActive(true);
+                arrow2.transform.position = B.GetTopWorldPosition() + Vector3.up * arrowOffset;
+            }
+            else
+            {
+                arrow2.SetActive(false);
+            }
         }
     }
 
@@ -117,17 +166,14 @@ public class PointSelectManager : MonoBehaviour
     {
         if (A == null || B == null || path == null || graph == null) return;
 
-        if(notifier == null) {Debug.Log("?");}
-        else Debug.Log("@");
-
         if (graph.IsBuildingFlooded(A)) { notifier?.Show("Start building is flooded / unavailable."); return; }
         if (graph.IsBuildingFlooded(B)) { notifier?.Show("Destination building is flooded / unavailable."); return; }
 
         var startAtt = graph.CreateAttachmentNode(A.transform.position, name: "StartAttach");
-        var goalAtt  = graph.CreateAttachmentNode(B.transform.position, name: "GoalAttach");
+        var goalAtt = graph.CreateAttachmentNode(B.transform.position, name: "GoalAttach");
 
         var startNode = startAtt?.node;
-        var goalNode  = goalAtt?.node;
+        var goalNode = goalAtt?.node;
 
         if (startNode == null || goalNode == null)
         {
@@ -144,6 +190,7 @@ public class PointSelectManager : MonoBehaviour
             goalAtt.Cleanup();
             return;
         }
+
         if (goalNode.blocked)
         {
             notifier?.Show("Nearest destination attachment is flooded.");
@@ -163,17 +210,14 @@ public class PointSelectManager : MonoBehaviour
             return;
         }
 
-        // Copy positions FIRST (because we will destroy temp nodes next)
         var points = new List<Vector3>(nodePath.Count + 2);
         points.Add(A.GetTopWorldPosition());
         foreach (var n in nodePath) points.Add(n.Position);
         points.Add(B.GetTopWorldPosition());
 
-        // Now safe to cleanup temp attachments
         startAtt.Cleanup();
         goalAtt.Cleanup();
 
-        // Draw
         path.useWorldSpace = true;
         path.positionCount = points.Count;
         for (int i = 0; i < points.Count; i++)
@@ -186,8 +230,12 @@ public class PointSelectManager : MonoBehaviour
     {
         A = null;
         B = null;
+
         if (hoverTag) hoverTag.SetActive(false);
         if (path) path.positionCount = 0;
+
+        if (arrow1) arrow1.SetActive(false);
+        if (arrow2) arrow2.SetActive(false);
 
         ifClick = false;
         confirmButton.SetActive(false);

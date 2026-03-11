@@ -1,44 +1,79 @@
-using System.Collections;
-using System.Collections.Generic;
 using Microsoft.MixedReality.Toolkit.Input;
 using UnityEngine;
 
 public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRealityPointerHandler
 {
     public PointSelectManager manager;
-    public bool select = false;
-    public GraphNode anchor;
-    Renderer rend;
+    // public GraphNode anchor;
 
+    [Header("Hover Highlight")]
+    public Color hoverEmission = Color.yellow * 2f;
 
-    // Start is called before the first frame update
+    private Renderer[] rends;
+    private Color[] originalEmissionColors;
+
     void Awake()
     {
-        rend = GetComponentInChildren<Renderer>();
+        rends = GetComponentsInChildren<Renderer>(true);
+        originalEmissionColors = new Color[rends.Length];
+
+        for (int i = 0; i < rends.Length; i++)
+        {
+            Material mat = rends[i].material;
+            if (mat.HasProperty("_EmissionColor"))
+            {
+                originalEmissionColors[i] = mat.GetColor("_EmissionColor");
+            }
+        }
     }
 
     public Vector3 GetTopWorldPosition()
     {
-        if (rend == null) return transform.position;
-        var b = rend.bounds;
+        if (rends == null || rends.Length == 0) return transform.position;
+
+        Bounds b = rends[0].bounds;
+        for (int i = 1; i < rends.Length; i++)
+            b.Encapsulate(rends[i].bounds);
+
         return new Vector3(b.center.x, b.max.y, b.center.z);
     }
 
     public void OnFocusEnter(FocusEventData eventData)
     {
-        manager.ShowTag(this);
-        Debug.Log("Focus ENTER on " + gameObject.name);
+        SetHoverHighlight(true);
+        manager?.ShowTag(this);
     }
 
     public void OnFocusExit(FocusEventData eventData)
     {
-        manager.HideTag(this);
-        Debug.Log("Focus EXIT on " + gameObject.name);
+        SetHoverHighlight(false);
+        manager?.HideTag(this);
+    }
+
+    private void SetHoverHighlight(bool on)
+    {
+        if (rends == null) return;
+
+        for (int i = 0; i < rends.Length; i++)
+        {
+            Material mat = rends[i].material;
+            if (!mat.HasProperty("_EmissionColor")) continue;
+
+            if (on)
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.SetColor("_EmissionColor", hoverEmission);
+            }
+            else
+            {
+                mat.SetColor("_EmissionColor", originalEmissionColors[i]);
+            }
+        }
     }
 
     public void OnPointerClicked(MixedRealityPointerEventData eventData)
     {
-        if (manager != null) manager.SelectPoint(this);
+        manager?.SelectPoint(this);
     }
 
     public void OnPointerDown(MixedRealityPointerEventData eventData) { }

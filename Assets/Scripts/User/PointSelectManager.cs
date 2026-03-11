@@ -117,6 +117,9 @@ public class PointSelectManager : MonoBehaviour
     {
         if (A == null || B == null || path == null || graph == null) return;
 
+        if(notifier == null) {Debug.Log("?");}
+        else Debug.Log("@");
+
         if (graph.IsBuildingFlooded(A)) { notifier?.Show("Start building is flooded / unavailable."); return; }
         if (graph.IsBuildingFlooded(B)) { notifier?.Show("Destination building is flooded / unavailable."); return; }
 

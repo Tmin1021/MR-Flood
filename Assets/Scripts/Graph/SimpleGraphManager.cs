@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-// using System.Numerics;
 using JetBrains.Annotations;
 using NUnit.Framework.Constraints;
 using Unity.VisualScripting;
@@ -239,18 +238,15 @@ public class SimpleGraphManager : MonoBehaviour
         go.transform.position = P;
         var attach = go.AddComponent<GraphNode>();
 
-        // Flood state for this node (since it isn't in 'nodes' list)
         attach.blocked = (attach.EffectiveHeight < waterLevel);
 
         float len = Vector3.Distance(A.Position, B.Position);
         float costToA = t * len;
         float costToB = (1f - t) * len;
 
-        // P -> A, P -> B (so start can leave)
         attach.edges.Add(new GraphEdge(A, costToA));
         attach.edges.Add(new GraphEdge(B, costToB));
 
-        // A -> P, B -> P (so goal can be reached)
         var backA = new GraphEdge(attach, costToA);
         var backB = new GraphEdge(attach, costToB);
         A.edges.Add(backA);

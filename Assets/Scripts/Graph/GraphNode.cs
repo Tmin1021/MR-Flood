@@ -7,7 +7,7 @@ public class GraphNode : MonoBehaviour
     public bool blocked = false;
 
     [Tooltip("Optional height offset if your pivots are not on the ground.")]
-    private float heightOffset = (-0.0055f); // Best: -2.15, Current: -1.86f
+    private float heightOffset = (-0.0055f);
 
     [System.NonSerialized] public readonly List<GraphEdge> edges = new List<GraphEdge>();
 

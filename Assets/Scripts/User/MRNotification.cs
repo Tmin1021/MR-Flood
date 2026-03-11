@@ -1,13 +1,14 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MRNotification : MonoBehaviour
 {
-    public TMP_Text text;
+    public Text text;
     public float showSeconds = 2f;
-
-    Coroutine routine;
+    
+    private Coroutine routine;
 
     public void Show(string message)
     {

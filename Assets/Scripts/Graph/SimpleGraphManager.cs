@@ -39,9 +39,6 @@ public class SimpleGraphManager : MonoBehaviour
         BuildGraphFromNeighbors();
         UpdateFloodBlocking(waterLevel);
     }
-    // private void Start() {
-    //     Debug.Log(SmallestDistanceFromNodeToBuilding());
-    // }
 
     // Update is called once per frame
     void Update()

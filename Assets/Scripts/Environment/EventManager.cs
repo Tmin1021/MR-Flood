@@ -6,12 +6,16 @@ using UnityEngine.SceneManagement;
 
 public class EventManager : MonoBehaviour
 {
-    //public GameObject waterPlane1;
     [Header("OSM Mode")]
     [SerializeField] private Renderer[] cityRenderers;  // assign parent or children renderers
     [SerializeField] private Material osmMat;
     [SerializeField] private Material bingMat;
+
+    [Header("City Model")]
     [SerializeField] private GameObject cityModel;
+
+    [Header("Nodes")]
+    [SerializeField] private Transform nodesParent;
 
     public void ToggleWaterPlane(GameObject waterPlane1)
     {
@@ -60,4 +64,23 @@ public class EventManager : MonoBehaviour
     {
         SceneManager.LoadScene("Flood");
     } 
+
+    public void ToggleNodes()
+    {
+        if (nodesParent == null)
+        {
+            Debug.Log("Nodes parent is missing!");
+            return;
+        }
+
+        // var sphereVisuals = new List<GameObject>();
+
+        foreach(GraphNode node in nodesParent.GetComponentsInChildren<GraphNode>(true))
+        {
+            Transform sphereTf = node.transform.Find("Sphere");
+            GameObject sphereGO = sphereTf.gameObject;
+
+            sphereGO.SetActive(!sphereGO.activeSelf);
+        }
+    }
 }

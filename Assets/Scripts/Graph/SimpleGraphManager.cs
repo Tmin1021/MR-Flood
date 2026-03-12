@@ -112,23 +112,6 @@ public class SimpleGraphManager : MonoBehaviour
         from.edges.Add(new GraphEdge(to, distance));
     }
 
-    // public GraphNode GetClosestNode(Vector3 worldPos)
-    // {
-    //     GraphNode closestNode = null;
-    //     float bestDist = float.MaxValue;
-        
-    //     foreach(var node in nodes)
-    //     {
-    //         float d = Vector3.Distance(node.Position, worldPos);
-    //         if(d <= bestDist)
-    //         {
-    //             closestNode = node;
-    //             bestDist = d;
-    //         }
-    //     }
-    //     return closestNode;
-    // }
-
     public float GetClosestDistance(Vector3 worldPos)
     {
         float bestDist = float.MaxValue;
@@ -151,7 +134,7 @@ public class SimpleGraphManager : MonoBehaviour
         foreach (var n in nodes)
         {
             n.blocked = (n.EffectiveHeight < waterLevel);
-            Debug.Log("Node " + n.name + ": " + n.EffectiveHeight);
+            Debug.Log("Node " + n.name + ": " + n.blocked);
         }
     }
 

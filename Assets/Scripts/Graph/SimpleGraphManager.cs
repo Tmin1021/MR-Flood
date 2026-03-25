@@ -40,17 +40,12 @@ public class SimpleGraphManager : MonoBehaviour
         UpdateFloodBlocking(waterLevel);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if(flood) waterLevel = flood.position.y;
+        if (flood) waterLevel = flood.position.y;
         Debug.Log("Water:" + waterLevel);
-        // Water (Global Position):
-        // - Lowest:-0.116
-        // - Middle:-0.106
-        // - Highest:-0.096
 
-        if(autoUpdateFlood)
+        if (autoUpdateFlood)
         {
             UpdateFloodBlocking(waterLevel);
         }
@@ -58,52 +53,53 @@ public class SimpleGraphManager : MonoBehaviour
 
     public void BuildGraphFromNeighbors()
     {
-        // for rebuild at runtime
         foreach (var node in nodes)
         {
             if (node != null) node.edges.Clear();
         }
         nodes.Clear();
 
-        if(nodesParent == null)
+        if (nodesParent == null)
         {
             Debug.Log("Assign parent of nodes!");
             return;
         }
 
-        for (int i = 0; i < nodesParent.childCount; i++) {
+        for (int i = 0; i < nodesParent.childCount; i++)
+        {
             Transform t = nodesParent.GetChild(i);
             var node = t.GetComponent<GraphNode>();
-            if (node == null) {
+            if (node == null)
+            {
                 node = t.AddComponent<GraphNode>();
                 Debug.Log("T deo co graph node");
             }
             nodes.Add(node);
         }
 
-        foreach(var node in nodes)
+        foreach (var node in nodes)
         {
             var nn = node.GetComponent<NodeNeighbors>();
-            if(nn == null) continue;
+            if (nn == null) continue;
 
-            foreach(var neighbor in nn.neighbors)
+            foreach (var neighbor in nn.neighbors)
             {
-                if(neighbor == node || neighbor == null) continue;
+                if (neighbor == node || neighbor == null) continue;
                 AddEdge(node, neighbor);
 
-                if(nn.bidirectional == true)
+                if (nn.bidirectional == true)
                 {
-                    AddEdge(neighbor, node); // redundant but whatever
+                    AddEdge(neighbor, node);
                 }
             }
-        }  
+        }
     }
 
-    public void AddEdge(GraphNode from, GraphNode to) 
+    public void AddEdge(GraphNode from, GraphNode to)
     {
-        for(int i = 0; i < from.edges.Count; i++)
+        for (int i = 0; i < from.edges.Count; i++)
         {
-            if(from.edges[i].to == to) return; // check duplicate
+            if (from.edges[i].to == to) return;
         }
         var distance = Vector3.Distance(from.Position, to.Position);
         from.edges.Add(new GraphEdge(to, distance));
@@ -112,11 +108,11 @@ public class SimpleGraphManager : MonoBehaviour
     public float GetClosestDistance(Vector3 worldPos)
     {
         float bestDist = float.MaxValue;
-        
-        foreach(var node in nodes)
+
+        foreach (var node in nodes)
         {
             float d = Vector3.Distance(node.Position, worldPos);
-            if(d <= bestDist)
+            if (d <= bestDist)
             {
                 bestDist = d;
             }
@@ -138,22 +134,22 @@ public class SimpleGraphManager : MonoBehaviour
     public bool IsBuildingFlooded(BuildingPoint b)
     {
         if (b == null) return true;
-        return b.transform.position.y < waterLevel;
+        return b.GetAnchorWorldY() < waterLevel;
     }
 
     private float SmallestDistanceFromNodeToBuilding()
     {
-        if(nodesParent == null) return 0.0f;
+        if (nodesParent == null) return 0.0f;
         float res = float.MaxValue;
-        foreach(Transform b in buildingsParent.GetComponentsInChildren<Transform>())
+        foreach (Transform b in buildingsParent.GetComponentsInChildren<Transform>())
         {
             float currentDist = GetClosestDistance(b.position);
-            if(res >= currentDist)
+            if (res >= currentDist)
             {
                 res = currentDist;
             }
         }
-        
+
         return res;
     }
 
@@ -186,7 +182,6 @@ public class SimpleGraphManager : MonoBehaviour
                 if (m == null) continue;
                 if (n.blocked || m.blocked || e.blocked) continue;
 
-                // Avoid duplicate directed edges (because you often add bidirectional edges)
                 if (n.GetInstanceID() > m.GetInstanceID()) continue;
 
                 ClosestPointOnSegment(worldPos, n.Position, m.Position, out Vector3 cp, out float tt);
@@ -213,7 +208,6 @@ public class SimpleGraphManager : MonoBehaviour
 
         if (d > maxSnapDist) return null;
 
-        // Create temp node at projected point P
         var go = new GameObject(name);
         go.transform.position = P;
         var attach = go.AddComponent<GraphNode>();

@@ -4,7 +4,9 @@ using UnityEngine;
 public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRealityPointerHandler
 {
     public PointSelectManager manager;
-    // public GraphNode anchor;
+
+    [Header("Anchor")]
+    [SerializeField] private Transform interactionAnchor;
 
     [Header("Hover Highlight")]
     public Color hoverEmission = Color.yellow * 2f;
@@ -12,24 +14,36 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
     private Renderer[] rends;
     private Color[] originalEmissionColors;
 
+    public Transform AnchorTransform => interactionAnchor != null ? interactionAnchor : transform;
+
     void Awake()
     {
-        rends = GetComponentsInChildren<Renderer>(true);
-        originalEmissionColors = new Color[rends.Length];
+        CacheRenderers();
+    }
 
-        for (int i = 0; i < rends.Length; i++)
-        {
-            Material mat = rends[i].material;
-            if (mat.HasProperty("_EmissionColor"))
-            {
-                originalEmissionColors[i] = mat.GetColor("_EmissionColor");
-            }
-        }
+    public void Configure(PointSelectManager newManager, Transform anchor = null)
+    {
+        manager = newManager;
+
+        if (anchor != null)
+            interactionAnchor = anchor;
+
+        CacheRenderers();
+    }
+
+    public Vector3 GetAnchorWorldPosition()
+    {
+        return AnchorTransform.position;
+    }
+
+    public float GetAnchorWorldY()
+    {
+        return AnchorTransform.position.y;
     }
 
     public Vector3 GetTopWorldPosition()
     {
-        if (rends == null || rends.Length == 0) return transform.position;
+        if (rends == null || rends.Length == 0) return GetAnchorWorldPosition();
 
         Bounds b = rends[0].bounds;
         for (int i = 1; i < rends.Length; i++)
@@ -73,10 +87,34 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
 
     public void OnPointerClicked(MixedRealityPointerEventData eventData)
     {
-        manager?.SelectPoint(this);
+        if (!(eventData is PokePointer))
+        {
+            manager?.SelectPoint(this);
+        }
     }
 
-    public void OnPointerDown(MixedRealityPointerEventData eventData) { }
+    public void OnPointerDown(MixedRealityPointerEventData eventData)
+    {
+        if (eventData is PokePointer)
+        {
+            manager?.SelectPoint(this);
+            eventData.Use();
+        }
+    }
+
     public void OnPointerUp(MixedRealityPointerEventData eventData) { }
     public void OnPointerDragged(MixedRealityPointerEventData eventData) { }
+
+    private void CacheRenderers()
+    {
+        rends = GetComponentsInChildren<Renderer>(true);
+        originalEmissionColors = new Color[rends.Length];
+
+        for (int i = 0; i < rends.Length; i++)
+        {
+            Material mat = rends[i].material;
+            if (mat.HasProperty("_EmissionColor"))
+                originalEmissionColors[i] = mat.GetColor("_EmissionColor");
+        }
+    }
 }

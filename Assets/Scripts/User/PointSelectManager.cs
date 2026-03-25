@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.MixedReality.Toolkit.Input;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,8 +20,8 @@ public class PointSelectManager : MonoBehaviour
     public float tagOffset = 0.05f;
 
     [Header("Arrow")]
-    public GameObject arrow1;   // points to A
-    public GameObject arrow2;   // points to B
+    public GameObject arrow1;
+    public GameObject arrow2;
     public float arrowOffset = 0.02f;
 
     [Header("References")]
@@ -60,24 +61,11 @@ public class PointSelectManager : MonoBehaviour
 
         if (confirmButton) confirmButton.SetActive(false);
         if (resetButton) resetButton.SetActive(false);
-        
+
         if (arrow1) arrow1.SetActive(false);
         if (arrow2) arrow2.SetActive(false);
 
-        if (housesParent == null) return;
-
-        foreach (Transform t in housesParent.GetComponentsInChildren<Transform>(true))
-        {
-            if (t == housesParent.transform) continue;
-            if (t.GetComponentInChildren<Renderer>() == null) continue;
-
-            var bp = t.GetComponent<BuildingPoint>();
-            if (bp == null) bp = t.gameObject.AddComponent<BuildingPoint>();
-            bp.manager = this;
-
-            if (t.GetComponent<Collider>() == null)
-                t.gameObject.AddComponent<BoxCollider>();
-        }
+        SetupBuildingInteractionTargets();
     }
 
     void Update()
@@ -96,6 +84,93 @@ public class PointSelectManager : MonoBehaviour
 
         if (hasPath)
             RedrawCurrentPath();
+    }
+
+    private void SetupBuildingInteractionTargets()
+    {
+        if (housesParent == null) return;
+
+        Transform housesRoot = housesParent.transform;
+
+        for (int i = 0; i < housesRoot.childCount; i++)
+        {
+            Transform houseRoot = housesRoot.GetChild(i);
+            Transform target = ResolveInteractionTarget(houseRoot);
+
+            if (target == null)
+            {
+                Debug.LogWarning($"Could not find interaction target for {houseRoot.name}");
+                continue;
+            }
+
+            CleanupRedundantInteractionComponents(houseRoot, target);
+            EnsureInteractionComponents(target);
+        }
+    }
+
+    private Transform ResolveInteractionTarget(Transform houseRoot)
+    {
+        if (houseRoot == null) return null;
+
+        Transform namedVisual = FindDeepChildByName(houseRoot, "Volume Visual");
+        if (namedVisual != null && namedVisual.GetComponentInChildren<Renderer>(true) != null)
+            return namedVisual;
+
+        Transform volume = FindDeepChildByName(houseRoot, "Volume");
+        if (volume != null)
+        {
+            Renderer volumeRenderer = volume.GetComponentInChildren<Renderer>(true);
+            if (volumeRenderer != null)
+                return volumeRenderer.transform;
+        }
+
+        Renderer anyRenderer = houseRoot.GetComponentInChildren<Renderer>(true);
+        return anyRenderer != null ? anyRenderer.transform : null;
+    }
+
+    private Transform FindDeepChildByName(Transform root, string targetName)
+    {
+        foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == targetName)
+                return child;
+        }
+
+        return null;
+    }
+
+    private void CleanupRedundantInteractionComponents(Transform houseRoot, Transform keepTarget)
+    {
+        foreach (Transform t in houseRoot.GetComponentsInChildren<Transform>(true))
+        {
+            if (t == keepTarget) continue;
+
+            var bp = t.GetComponent<BuildingPoint>();
+            if (bp != null) Destroy(bp);
+
+            var touchable = t.GetComponent<NearInteractionTouchableVolume>();
+            if (touchable != null) Destroy(touchable);
+
+            bool hasOwnRenderer = t.GetComponent<Renderer>() != null;
+            if (!hasOwnRenderer)
+            {
+                var col = t.GetComponent<BoxCollider>();
+                if (col != null) Destroy(col);
+            }
+        }
+    }
+
+    private void EnsureInteractionComponents(Transform target)
+    {
+        var bp = target.GetComponent<BuildingPoint>();
+        if (bp == null) bp = target.gameObject.AddComponent<BuildingPoint>();
+        bp.Configure(this, target);
+
+        if (target.GetComponent<Collider>() == null)
+            target.gameObject.AddComponent<BoxCollider>();
+
+        if (target.GetComponent<NearInteractionTouchableVolume>() == null)
+            target.gameObject.AddComponent<NearInteractionTouchableVolume>();
     }
 
     private void UpdateHoverTag()
@@ -123,13 +198,13 @@ public class PointSelectManager : MonoBehaviour
         if (confirmButton != null && confirmButton.activeSelf)
         {
             confirmButton.transform.position =
-                B.GetTopWorldPosition() + Vector3.up * tagOffset * 2f * dynamicScale;
+                B.GetTopWorldPosition() + Vector3.up * tagOffset * 2f;
         }
 
         if (resetButton != null && resetButton.activeSelf)
         {
             resetButton.transform.position =
-                B.GetTopWorldPosition() + Vector3.up * tagOffset * 3f * dynamicScale;
+                B.GetTopWorldPosition() + Vector3.up * tagOffset * 3f;
         }
     }
 
@@ -165,7 +240,6 @@ public class PointSelectManager : MonoBehaviour
     {
         if (b == null) return;
 
-        // selecting again after a completed path starts a new selection
         if (hasPath)
         {
             ClearCurrentPathOnly();
@@ -195,7 +269,6 @@ public class PointSelectManager : MonoBehaviour
         }
         else
         {
-            // restart selection with new A
             A = b;
             B = null;
 
@@ -255,8 +328,8 @@ public class PointSelectManager : MonoBehaviour
             return;
         }
 
-        var startAtt = graph.CreateAttachmentNode(A.transform.position, name: "StartAttach");
-        var goalAtt = graph.CreateAttachmentNode(B.transform.position, name: "GoalAttach");
+        var startAtt = graph.CreateAttachmentNode(A.GetAnchorWorldPosition(), name: "StartAttach");
+        var goalAtt = graph.CreateAttachmentNode(B.GetAnchorWorldPosition(), name: "GoalAttach");
 
         var startNode = startAtt?.node;
         var goalNode = goalAtt?.node;
@@ -301,7 +374,7 @@ public class PointSelectManager : MonoBehaviour
         foreach (var n in nodePath)
         {
             if (n == null) continue;
-            if (n == startNode || n == goalNode) continue; // temp nodes, do not store
+            if (n == startNode || n == goalNode) continue;
             currentPathNodes.Add(n);
         }
 

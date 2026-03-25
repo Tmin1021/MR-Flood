@@ -5,7 +5,11 @@ using UnityEngine;
 public class FollowUser : MonoBehaviour
 {
     public GameObject user;
-    public Vector3 offset;
+    // public Vector3 offset;
+
+    [Header("Rotation")]
+    public bool faceUser = true;
+    public bool onlyY = true;
     private Transform userTransform;
     // Start is called before the first frame update
     void Start()
@@ -16,10 +20,20 @@ public class FollowUser : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector3 tmp = userTransform.position;
+        if(userTransform == null) return;
 
-        tmp += offset;
+        if(faceUser)
+        {
+            Vector3 dir = transform.position - userTransform.position;
 
-        gameObject.transform.position = tmp;
+            if(onlyY)
+            {
+                dir.y = 0;
+            }
+            if (dir.sqrMagnitude > 0.0001f) // check if dir is too small
+            {
+                transform.rotation = Quaternion.LookRotation(dir);
+            }
+        }
     }
 }

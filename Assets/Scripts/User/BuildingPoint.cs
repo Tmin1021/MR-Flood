@@ -11,14 +11,26 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
     [Header("Hover Highlight")]
     public Color hoverEmission = Color.yellow * 2f;
 
+    [Header("Flood Highlight")]
+    public Color floodedEmission = Color.red * 2f;
+
+    [Header("Flood")]
+    public Transform floodTransform;
+
     private Renderer[] rends;
     private Color[] originalEmissionColors;
+    private float waterLevel;
 
     public Transform AnchorTransform => interactionAnchor != null ? interactionAnchor : transform;
 
     void Awake()
     {
         CacheRenderers();
+    }
+
+    void Update()
+    {
+        if(floodTransform) waterLevel = floodTransform.position.y;
     }
 
     public void Configure(PointSelectManager newManager, Transform anchor = null)
@@ -39,6 +51,22 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
     public float GetAnchorWorldY()
     {
         return AnchorTransform.position.y;
+    }
+    public float GetBaseWorldY()
+    {
+        if (rends == null || rends.Length == 0)
+            return GetAnchorWorldY();
+
+        Bounds b = rends[0].bounds;
+        for (int i = 1; i < rends.Length; i++)
+            b.Encapsulate(rends[i].bounds);
+
+        return b.min.y;
+    }
+
+    public bool IsFlooded()
+    {
+        return waterLevel >= GetBaseWorldY();
     }
 
     public Vector3 GetTopWorldPosition()
@@ -75,8 +103,16 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
 
             if (on)
             {
-                mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", hoverEmission);
+                if(!isFlooded())
+                {
+                    mat.EnableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", hoverEmission);
+                }
+                else // the building flooded
+                {
+                    mat.EnableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", floodedEmission);
+                }
             }
             else
             {
@@ -87,7 +123,7 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
 
     public void OnPointerClicked(MixedRealityPointerEventData eventData)
     {
-        if (!(eventData is PokePointer))
+        if (!(eventData.Pointer is PokePointer))
         {
             manager?.SelectPoint(this);
         }
@@ -95,7 +131,7 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
 
     public void OnPointerDown(MixedRealityPointerEventData eventData)
     {
-        if (eventData is PokePointer)
+        if (eventData.Pointer is PokePointer)
         {
             manager?.SelectPoint(this);
             eventData.Use();

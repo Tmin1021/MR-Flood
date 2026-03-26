@@ -134,7 +134,7 @@ public class SimpleGraphManager : MonoBehaviour
     public bool IsBuildingFlooded(BuildingPoint b)
     {
         if (b == null) return true;
-        return b.GetAnchorWorldY() < waterLevel;
+        return b.IsFlooded();
     }
 
     private float SmallestDistanceFromNodeToBuilding()

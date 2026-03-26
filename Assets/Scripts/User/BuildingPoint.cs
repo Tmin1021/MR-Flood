@@ -33,12 +33,15 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
         if(floodTransform) waterLevel = floodTransform.position.y;
     }
 
-    public void Configure(PointSelectManager newManager, Transform anchor = null)
+    public void Configure(PointSelectManager newManager, Transform anchor = null, Transform flood = null)
     {
         manager = newManager;
 
         if (anchor != null)
             interactionAnchor = anchor;
+
+        if (flood != null)
+            floodTransform = flood;
 
         CacheRenderers();
     }
@@ -66,6 +69,10 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
 
     public bool IsFlooded()
     {
+        // Debug.Log(waterLevel);
+        // Debug.Log("Base Y: " + GetBaseWorldY());
+        // Debug.Log("Position Y: " + this.transform.position.y);
+
         return waterLevel >= GetBaseWorldY();
     }
 
@@ -103,7 +110,7 @@ public class BuildingPoint : MonoBehaviour, IMixedRealityFocusHandler, IMixedRea
 
             if (on)
             {
-                if(!isFlooded())
+                if(!IsFlooded())
                 {
                     mat.EnableKeyword("_EMISSION");
                     mat.SetColor("_EmissionColor", hoverEmission);

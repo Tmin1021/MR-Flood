@@ -148,6 +148,8 @@ public class PointSelectManager : MonoBehaviour
             var bp = t.GetComponent<BuildingPoint>();
             if (bp != null) Destroy(bp);
 
+            // bp.floodTransform = graph.flood.transform;
+
             var touchable = t.GetComponent<NearInteractionTouchableVolume>();
             if (touchable != null) Destroy(touchable);
 
@@ -164,7 +166,7 @@ public class PointSelectManager : MonoBehaviour
     {
         var bp = target.GetComponent<BuildingPoint>();
         if (bp == null) bp = target.gameObject.AddComponent<BuildingPoint>();
-        bp.Configure(this, target);
+        bp.Configure(this, target , graph.flood.transform);
 
         if (target.GetComponent<Collider>() == null)
             target.gameObject.AddComponent<BoxCollider>();
@@ -239,7 +241,9 @@ public class PointSelectManager : MonoBehaviour
     public void SelectPoint(BuildingPoint b)
     {
         if (b == null) return;
-
+        
+        if(b.IsFlooded()) return;
+        
         if (hasPath)
         {
             ClearCurrentPathOnly();

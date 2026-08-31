@@ -99,3 +99,62 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
 RWT_Cache/
+
+# AI/agent-only local artifacts
+**/.agents/
+/.codex/
+/.cursor/
+/.claude/
+/AGENTS.md
+/CLAUDE.md
+/SpatialPlacementSystem_Editor_DebugCube_Test_Setup.txt
+/Assets/Editor/ChatGPT Image Aug 20, 2026, 01_18_30 PM.png*
+
+# Local licensed Asset Store sources. Contributors must import their own
+# licensed copies; project-owned generated outputs are retained separately.
+/Assets/!GET_MORE_ASSETS_FOR_FREE/
+/Assets/!GET_MORE_ASSETS_FOR_FREE.meta
+/Assets/BrokenVector/
+/Assets/BrokenVector.meta
+/Assets/Building Generator/
+/Assets/Building Generator.meta
+/Assets/BuildR2/
+/Assets/BuildR2.meta
+/Assets/City Pack/
+/Assets/City Pack.meta
+/Assets/EasyRoads3D/
+/Assets/EasyRoads3D.meta
+/Assets/EasyRoads3D scenes/
+/Assets/EasyRoads3D scenes.meta
+/Assets/Gizmos/
+/Assets/Gizmos.meta
+/Assets/Real World Terrain/
+/Assets/Real World Terrain.meta
+/Assets/SCI-FI UI Pack Pro/
+/Assets/SCI-FI UI Pack Pro.meta
+/Assets/SUIMONO - WATER SYSTEM 2/
+/Assets/SUIMONO - WATER SYSTEM 2.meta
+
+# Large local terrain-generation archives not referenced by the committed
+# runtime scene. The baked runtime city remains under Assets/Generated.
+/Assets/RWT_Result/Main Use/
+/Assets/RWT_Result/Main Use.meta
+/Assets/RWT_Result/2026-05-03 00-09.meta
+/Assets/RWT_Result/2026-05-03 00-13.meta
+/Assets/RWT_Result/2026-05-03 00-22.meta
+/Assets/Export.meta
+
+# Unused/generated Meta XR imports and settings (the project targets MRTK2).
+/Assets/Oculus/
+/Assets/Oculus.meta
+/Assets/Samples/Meta XR Interaction*SDK/
+/Assets/Samples/Meta XR Interaction*SDK.meta
+/Assets/Resources/ImmersiveDebuggerSettings.asset*
+/Assets/Resources/InputActions.asset*
+/Assets/Resources/MetaXR*.asset*
+/Assets/Resources/OVR*.asset*
+/Assets/Resources/OculusRuntimeSettings.asset*
+
+# Local UWP signing material must never be committed.
+/Assets/WSATestCertificate.pfx
+/Assets/WSATestCertificate.pfx.meta

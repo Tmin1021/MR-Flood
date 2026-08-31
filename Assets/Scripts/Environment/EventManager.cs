@@ -10,12 +10,34 @@ public class EventManager : MonoBehaviour
     [SerializeField] private Renderer[] cityRenderers;  // assign parent or children renderers
     [SerializeField] private Material osmMat;
     [SerializeField] private Material bingMat;
+    [SerializeField] private MainContentController citySettingsController;
+    [SerializeField] private ButtonDisplay osmButtonDisplay;
 
     [Header("City Model")]
     [SerializeField] private GameObject cityModel;
 
     [Header("Nodes")]
     [SerializeField] private Transform nodesParent;
+    [SerializeField] private CityPlacementManager cityPlacementManager;
+    [SerializeField] private CityAnchorManager cityAnchorManager;
+    private bool useOsmTerrainTexture = true;
+    private Coroutine buttonStateSync;
+
+    private void Awake()
+    {
+        cityPlacementManager ??=
+            FindFirstObjectByType<CityPlacementManager>(FindObjectsInactive.Include);
+        cityAnchorManager ??=
+            FindFirstObjectByType<CityAnchorManager>(FindObjectsInactive.Include);
+        citySettingsController ??=
+            FindFirstObjectByType<MainContentController>(FindObjectsInactive.Include);
+    }
+
+    private void Start()
+    {
+        SyncTerrainTextureStateFromRenderer();
+        SetOSMVisible(useOsmTerrainTexture);
+    }
 
     public void ToggleWaterPlane(GameObject waterPlane1)
     {
@@ -30,18 +52,91 @@ public class EventManager : MonoBehaviour
 
     public void ToggleOSMMode()
     {
-        if (cityRenderers == null || cityRenderers.Length == 0 || !osmMat || !bingMat) return;
+        SyncTerrainTextureStateFromRenderer();
+        SetOSMVisible(!useOsmTerrainTexture);
+    }
 
-        foreach (var r in cityRenderers)
+    public void ShowOSM()
+    {
+        SetOSMVisible(true);
+    }
+
+    public void HideOSM()
+    {
+        SetOSMVisible(false);
+    }
+
+    public void SetOSMVisible(bool visible)
+    {
+        useOsmTerrainTexture = visible;
+        citySettingsController ??=
+            FindFirstObjectByType<MainContentController>(FindObjectsInactive.Include);
+
+        if (citySettingsController != null)
         {
-            if (!r) continue;
-            var current = r.sharedMaterial;
-            r.sharedMaterial = (current == osmMat) ? bingMat : osmMat;
+            citySettingsController.SetTerrainTexture(visible);
         }
+        else if (cityRenderers != null && osmMat != null && bingMat != null)
+        {
+            Material selectedMaterial = visible ? osmMat : bingMat;
+            for (int i = 0; i < cityRenderers.Length; i++)
+            {
+                Renderer renderer = cityRenderers[i];
+                if (renderer != null)
+                    renderer.sharedMaterial = selectedMaterial;
+            }
+        }
+
+        osmButtonDisplay?.SetState(visible);
+        if (Application.isPlaying && osmButtonDisplay != null)
+        {
+            if (buttonStateSync != null)
+                StopCoroutine(buttonStateSync);
+            buttonStateSync = StartCoroutine(SyncOsmButtonVisualAfterClick(visible));
+        }
+    }
+
+    private void SyncTerrainTextureStateFromRenderer()
+    {
+        if (cityRenderers == null || osmMat == null)
+            return;
+
+        for (int i = 0; i < cityRenderers.Length; i++)
+        {
+            Renderer renderer = cityRenderers[i];
+            if (renderer == null)
+                continue;
+
+            useOsmTerrainTexture = renderer.sharedMaterial == osmMat;
+            return;
+        }
+    }
+
+    private IEnumerator SyncOsmButtonVisualAfterClick(bool visible)
+    {
+        // Some legacy button prefabs also invoke ToggleBackground after this
+        // handler. Reapply the authoritative map state once that click finishes.
+        yield return null;
+        osmButtonDisplay?.SetState(visible);
+        buttonStateSync = null;
     }
 
     public void ToggleBounds()
     {
+        if (cityPlacementManager == null && cityAnchorManager == null)
+        {
+            cityPlacementManager =
+                FindFirstObjectByType<CityPlacementManager>(FindObjectsInactive.Include);
+            cityAnchorManager =
+                FindFirstObjectByType<CityAnchorManager>(FindObjectsInactive.Include);
+        }
+
+        if (cityPlacementManager != null || cityAnchorManager != null)
+        {
+            Debug.Log("EventManager: bounds-based transform editing is disabled in the one-time placement flow.");
+            return;
+        }
+
         if (cityModel == null)
         {
             Debug.Log("City model is missing!");
@@ -62,7 +157,7 @@ public class EventManager : MonoBehaviour
 
     public void ResetScene()
     {
-        SceneManager.LoadScene("Flood");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     } 
 
     public void ToggleNodes()
@@ -81,6 +176,39 @@ public class EventManager : MonoBehaviour
             GameObject sphereGO = sphereTf.gameObject;
 
             sphereGO.SetActive(!sphereGO.activeSelf);
+        }
+    }
+
+    public void ShowNodes()
+    {
+        SetNodesVisible(true);
+    }
+
+    public void HideNodes()
+    {
+        SetNodesVisible(false);
+    }
+
+    public void SetNodesVisible(bool visible)
+    {
+        if (nodesParent == null)
+        {
+            Debug.Log("Nodes parent is missing!");
+            return;
+        }
+
+        foreach (GraphNode node in nodesParent.GetComponentsInChildren<GraphNode>(true))
+        {
+            if (node == null) continue;
+
+            Transform sphereTf = node.transform.Find("Sphere");
+            if (sphereTf == null)
+            {
+                Debug.LogWarning($"Node '{node.name}' does not have a child named Sphere.");
+                continue;
+            }
+
+            sphereTf.gameObject.SetActive(visible);
         }
     }
 }

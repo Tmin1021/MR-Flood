@@ -11,7 +11,11 @@ public class ButtonDisplay : MonoBehaviour
     void Awake()
     {
         _r = GetComponent<Renderer>();
-        SetVisual(false); // start OFF (change to true if you want)
+    }
+
+    private void Start()
+    {
+        SetVisual(_isOn);
     }
 
     // Call this from the MRTK button OnClick event
@@ -21,9 +25,15 @@ public class ButtonDisplay : MonoBehaviour
         SetVisual(_isOn);
     }
 
+    public void SetState(bool value)
+    {
+        _isOn = value;
+        SetVisual(_isOn);
+    }
+
     private void SetVisual(bool on)
     {
         if (!_r || !onColor || !offColor) return;
-        _r.material = on ? onColor : offColor;
+        _r.sharedMaterial = on ? onColor : offColor;
     }
 }

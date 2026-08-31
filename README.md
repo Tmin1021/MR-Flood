@@ -91,9 +91,38 @@ Contains utility toggles such as water-plane visibility, OSM/Bing material switc
 
 ## Requirements
 
-- **Unity 2023.2.x**
+- **Unity 2023.2.22f1**
 - **Universal Windows Platform (UWP)** target if deploying to HoloLens
 - **MRTK 2.8.3**
+
+## Clone and Setup
+
+This repository uses Git LFS for the baked city meshes and the local HoloLens video. Install Git LFS before cloning:
+
+```bash
+git lfs install
+git clone https://github.com/Tmin1021/MR-Flood.git
+cd MR-Flood
+git lfs pull
+```
+
+Open the cloned folder in Unity `2023.2.22f1`. Unity will restore the packages in `Packages/manifest.json` and regenerate `Library/` and IDE project files. The startup scene is `Assets/Scenes/MRTK/HandMenu_Flood.unity`.
+
+### Licensed third-party dependencies
+
+This public repository does not redistribute paid or seat-licensed Unity Asset Store source files. Import licensed copies of these assets before opening the application scene so Unity can restore their original GUID references:
+
+- SCI-FI UI Pack Pro (D.F.Y. STUDIO)
+- BuildR 2
+- Real World Terrain (Infinity Code)
+- SUIMONO Water System 2, version 2.1.13
+- CITY package (255 Pixel Studios)
+- Low Poly Tree Pack (Broken Vector)
+- Realistic Tree 9 Rainbow Tree (Pixel Games)
+
+EasyRoads3D Pro and Building Generator are only needed for legacy/editor regeneration workflows. Keep vendor assets at their default import paths and do not replace their `.meta` files. The runtime city meshes are already included under `Assets/Generated/` through Git LFS, so they do not need to be regenerated to run the committed scene.
+
+For a UWP/HoloLens build, create your own test or production signing certificate and select it in Unity Player Settings. Signing certificates and private keys are intentionally excluded.
 
 ## Recommended Project Setup
 

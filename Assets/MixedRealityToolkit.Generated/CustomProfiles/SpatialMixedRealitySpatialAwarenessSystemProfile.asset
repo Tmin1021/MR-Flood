@@ -21,3 +21,10 @@ MonoBehaviour:
     priority: 0
     runtimePlatform: 9
     observerProfile: {fileID: 11400000, guid: bf991b66deb131145b96d580f0d66ba2, type: 2}
+  - componentType:
+      reference: Microsoft.MixedReality.Toolkit.XRSDK.GenericXRSDKSpatialMeshObserver,
+        Microsoft.MixedReality.Toolkit.Providers.XRSDK
+    componentName: XR SDK Spatial Mesh Observer (Android)
+    priority: 0
+    runtimePlatform: 32
+    observerProfile: {fileID: 11400000, guid: bf991b66deb131145b96d580f0d66ba2, type: 2}

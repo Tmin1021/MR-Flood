@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 474805029665133874}
   - component: {fileID: 2912765834111226959}
   - component: {fileID: 7304237902182154004}
+  - component: {fileID: 5297929945799643539}
   m_Layer: 0
   m_Name: Intersection
   m_TagString: Untagged
@@ -61,6 +62,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blocked: 0
+--- !u!114 &5297929945799643539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2210834714273814565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9a3675f3566e8d448d84bcc4a7cd605, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  intersectionId: 
 --- !u!1 &7605962358363180956
 GameObject:
   m_ObjectHideFlags: 0
